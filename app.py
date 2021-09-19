@@ -24,34 +24,32 @@ class Todo(db.Model):
 model=load_model('yield_predictions.h5')
 scaler = joblib.load('scaler.save') 
 
-def predict(Area,Rainfall,Temperature,pH,Nitrogen,ElectricalConductivity):
-  a=np.array([[Area,Rainfall,Temperature,pH,Nitrogen,ElectricalConductivity]])
+def crop_prediction(n,p,k,temp,humidity,ph,rainfall):
+  a=np.array([[n,p,k,temp,humidity,ph,rainfall]])
   a=scaler.transform(a)
-  for i in abs(model.predict(a)):
-    return np.math.floor(float(i))
+  predict_x=np.argmin(model.predict(a,verbose=0,batch_size=None,steps=None),axis=1)
+
+
+  c=None
+
+  for i in predict_x:
+    c=i
+
+  return mapping[c]
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
     if request.method == 'POST':
-        Area = request.form['Area']
-        Rainfall = request.form['Rainfall']
-        Temperature = request.form['Temperature']
+        n = request.form['n']
+        p = request.form['p']
+        k = request.form['k']
+        temp = request.form['temp']
+        humidity = request.form['humidity']
         ph = request.form['pH']
-        Nitrogen = request.form['Nitrogen']
-        ElectricalConductivity =request.form['ElectricalConductivity']
-        crop_yield = predict(Area,Rainfall,Temperature,pH,Nitrogen,ElectricalConductivity)
-#         task_content = request.form['content']
-#         new_task = Todo(content=task_content)
-
-#         try:
-#             db.session.add(new_task)
-#             db.session.commit()
-#             return redirect('/')
-#         except:
-#             return 'There was an issue adding your task'
+        rainfall = request.form['rainfall']
+        crop_yield = crop_prediction(n,p,k,temp,humidity,ph,rainfall)
 
     else:
-#         tasks = Todo.query.order_by(Todo.date_created).all()
         return render_template('newindex.html', crop_yield=crop_yield)
 
 
