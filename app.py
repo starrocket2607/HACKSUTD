@@ -1,5 +1,11 @@
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+from sklearn.externals import joblib
+import numpy as np
+import streamlit as st
+import pickle
 
 
 app = Flask(__name__)
@@ -14,6 +20,15 @@ class Todo(db.Model):
     def __repr__(self):
         return '<Task %r>' % self.id
 
+
+model=load_model('yield_predictions.h5')
+scaler = joblib.load('scaler.save') 
+
+def predict(Area,Rainfall,Temperature,pH,Nitrogen,ElectricalConductivity):
+  a=np.array([[Area,Rainfall,Temperature,pH,Nitrogen,ElectricalConductivity]])
+  a=scaler.transform(a)
+  for i in abs(model.predict(a)):
+    return np.math.floor(float(i))
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
